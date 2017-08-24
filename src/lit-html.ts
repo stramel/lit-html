@@ -82,6 +82,21 @@ export function render(result: TemplateResult, container: Element|DocumentFragme
 const exprMarker = `{{lit-${Math.random()}}}`;
 
 /**
+ * Regex to scan the string preceding an expression to see if we're in a table
+ * context.
+ * 
+ * This picks up on cases like html`<table>${}</table>`, but not
+ * html`<table>foo ${}</table>`. This should be ok as the intent of the second
+ * case is ambiguous: should the expression come after "foo" which will be
+ * moved outside the table by the parser, or before the closing </table> tag?
+ */
+// TODO(justnfagnani): Add support for </caption>, </tr>, etc.
+const tableRegex = /<t(?:able|body|head|foot|r)>\W*$/;
+const tableMarker = '_-lit-html-_'
+const tableComment = `<!--${tableMarker}-->`;
+const exprOrTableRegex = new RegExp(`${exprMarker}|${tableComment}`);
+
+/**
  * A placeholder for a dynamic expression in an HTML template.
  *
  * There are two built-in part types: AttributePart and NodePart. NodeParts
@@ -107,14 +122,26 @@ export class TemplatePart {
   }
 }
 
+
 export class Template {
   parts: TemplatePart[] = [];
   element: HTMLTemplateElement;
 
   constructor(strings: TemplateStringsArray) {
     this.element = document.createElement('template');
-    this.element.innerHTML = strings.join(exprMarker);
-    const walker = document.createTreeWalker(this.element.content, 5 /* elements & text */);
+    this.element.innerHTML = (() => {
+      const l = strings.length;
+      const a = new Array((l * 2) - 1);
+      for (let i = 0; i < l; i++) {
+        const s = strings[i];
+        a.push(s);
+        if (i < l - 1) {
+          a.push(s.match(tableRegex) ? tableComment : exprMarker);
+        }
+      }
+      return a.join('');
+    })();
+    const walker = document.createTreeWalker(this.element.content, 133 /* elements & text & comments */);
     let index = -1;
     let partIndex = 0;
     const nodesToRemove = [];
@@ -127,7 +154,7 @@ export class Template {
         const attributes = node.attributes;
         for (let i = 0; i < attributes.length; i++) {
           const attribute = attributes.item(i);
-          const attributeStrings = attribute.value.split(exprMarker);
+          const attributeStrings = attribute.value.split(exprOrTableRegex);
           if (attributeStrings.length > 1) {
             // Get the template literal section leading up to the first expression
             // in this attribute attribute
@@ -166,6 +193,13 @@ export class Template {
           nodesToRemove.push(node);
           index--;
         }
+      } else if (node.nodeType === 8 /* COMMENT_NODE */ && node.nodeValue == tableMarker) {
+        console.log('COMMENT');
+        const parent = node.parentNode!;
+        parent.insertBefore(new Text(), node);
+        parent.insertBefore(new Text(), node);
+        this.parts.push(new TemplatePart('node', index++));
+        nodesToRemove.push(node);
       }
     }
 

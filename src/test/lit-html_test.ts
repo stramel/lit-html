@@ -169,6 +169,25 @@ suite('lit-html', () => {
         assert.equal(container.innerHTML, '<h1>foo</h1>bar');
       });
 
+      test('renders nested templates with table rows', () => {
+        const container = document.createElement('div');
+        let table = html`<table>${html`<tr>${html`<td></td>`}</tr>`}</table>`;
+        render(table, container);
+        assert.equal(container.innerHTML, '<table><tr><td></td></tr></table>');
+
+        table = html`<tbody>${html`<tr></tr>`}</tbody>`;
+        render(table, container);
+        assert.equal(container.innerHTML, '<tbody><tr></tr></tbody>');
+      });
+
+      test('renders attributes with the text <table> before an expression', () => {
+        const container = document.createElement('div');
+        const template = html`<div a="<table>${'foo'}"></div>`;
+        console.log(template.template.element.innerHTML);
+        render(template, container);
+        assert.equal(container.innerHTML, '<div a="<table>foo"></div>');
+      });
+
       test('values contain interpolated values', () => {
         const container = document.createElement('div');
         const t = html`${'a'},${'b'},${'c'}`;
