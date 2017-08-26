@@ -91,7 +91,7 @@ suite('lit-extended', () => {
         assert.notEqual(fooDiv, barDiv);
       });
     
-    test.only('adds event listener functions, calls with right this value', () => {
+    test('adds event listener functions, calls with right this value', () => {
       const container = document.createElement('div');
       let thisValue;
       let event;
@@ -106,7 +106,7 @@ suite('lit-extended', () => {
       assert.instanceOf(event, MouseEvent);
     });
 
-    test.only('adds event listener objects, calls with right this value', () => {
+    test('adds event listener objects, calls with right this value', () => {
       const container = document.createElement('div');
       let thisValue;
       let event;
@@ -122,7 +122,7 @@ suite('lit-extended', () => {
       assert.equal(thisValue, listener);
     });
 
-    test.only('only adds event listeners once', () => {
+    test('only adds event listeners once', () => {
       const container = document.createElement('div');
       let count = 0;
       let listener = () => { count++; };
@@ -135,7 +135,7 @@ suite('lit-extended', () => {
       assert.equal(count, 1);
     });
 
-    test.only('removes event listeners', () => {
+    test('removes event listeners', () => {
       const container = document.createElement('div');
       let target;
       let listener: any = (e: any) => target = e.target;
