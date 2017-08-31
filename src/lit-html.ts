@@ -22,20 +22,22 @@ const svgTemplates = new Map<TemplateStringsArray, Template>();
  * Interprets a template literal as an HTML template that can efficiently
  * render to and update a container.
  */
-export function html(strings: TemplateStringsArray, ...values: any[]): TemplateResult {
+export const html = (strings: TemplateStringsArray, ...values: any[]) =>
+    litTag(strings, values, templates, false);
+
+/**
+ * Interprets a template literal as an SVG template that can efficiently
+ * render to and update a container.
+ */
+export const svg = (strings: TemplateStringsArray, ...values: any[]) =>
+    litTag(strings, values, svgTemplates, true);
+
+function litTag(strings: TemplateStringsArray, values: any[],
+    templates: Map<TemplateStringsArray, Template>, isSvg: boolean): TemplateResult {
   let template = templates.get(strings);
   if (template === undefined) {
-    template = new Template(strings);
+    template = new Template(strings, isSvg);
     templates.set(strings, template);
-  }
-  return new TemplateResult(template, values);
-}
-
-export function svg(strings: TemplateStringsArray, ...values: any[]): TemplateResult {
-  let template = svgTemplates.get(strings);
-  if (template === undefined) {
-    template = new Template(strings, true);
-    svgTemplates.set(strings, template);
   }
   return new TemplateResult(template, values);
 }

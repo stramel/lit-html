@@ -15,7 +15,7 @@
 /// <reference path="../../node_modules/@types/mocha/index.d.ts" />
 /// <reference path="../../node_modules/@types/chai/index.d.ts" />
 
-import {html, render, defaultPartCallback, TemplateResult, TemplatePart, TemplateInstance, NodePart, Part, AttributePart } from '../lit-html.js';
+import {html, render, svg, defaultPartCallback, TemplateResult, TemplatePart, TemplateInstance, NodePart, Part, AttributePart } from '../lit-html.js';
 
 const assert = chai.assert;
 
@@ -293,6 +293,15 @@ suite('lit-html', () => {
         assert.equal(container.innerHTML, `<div foo="bar">
               baz
               <p>qux</p></div>`);
+      });
+
+      test('renders SVG', () => {
+        const container = document.createElement('svg');
+        const t = svg`<line y1="1" y2="1"/>`;
+        render(t, container);
+        const line = container.firstElementChild!;
+        assert.equal(line.tagName, 'line');
+        assert.equal(line.namespaceURI, 'http://www.w3.org/2000/svg');        
       });
 
     });
